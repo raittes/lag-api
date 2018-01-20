@@ -1,0 +1,14 @@
+/hello:
+  lag: 100ms
+  body: hello world
+/test:
+  lag: 300ms
+  status_code: 234
+  headers:
+    Content-Type: application/json
+    X-lag-api:  yep
+  body: '{"key": "value"}'
+/slow:
+  lag: 2s
+  status_code: 500
+  body: "not so fast"
