@@ -4,6 +4,9 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +16,7 @@ import (
 var (
 	addr          = flag.String("addr", ":8888", "Listen port")
 	static_yml    = flag.String("static-rules", "", "YML with static rules")
+	proxy         = flag.String("proxy", "", "url to proxy requests")
 	lag           = flag.Duration("lag", 0*time.Millisecond, "response delay in ms")
 	static_config StaticConfig
 )
@@ -80,6 +84,20 @@ func staticHandler() *gin.Engine {
 	return router
 }
 
+func proxyHandler(url *url.URL) *gin.Engine {
+	router := gin.Default()
+	router.NoRoute(func(c *gin.Context) {
+		director := func(req *http.Request) {
+			req.URL.Scheme = url.Scheme
+			req.URL.Host = url.Host // endpoint
+			req.Host = url.Host     // header
+		}
+		proxy := &httputil.ReverseProxy{Director: director}
+		proxy.ServeHTTP(c.Writer, c.Request)
+	})
+	return router
+}
+
 func main() {
 	flag.Parse()
 
@@ -89,6 +107,13 @@ func main() {
 	if *static_yml != "" {
 		read_yaml(*static_yml)
 		handler = staticHandler()
+	} else if *proxy != "" {
+		if url, err := url.Parse(*proxy); err != nil {
+			log.Fatal("Failed to parse URL: ", err)
+		} else {
+			log.Println("Proxying requests to:", url)
+			handler = proxyHandler(url)
+		}
 	} else {
 		log.Fatal("No handler specified")
 	}
