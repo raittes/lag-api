@@ -43,6 +43,20 @@ func read_yaml(file_path string) {
 	}
 }
 
+func Lag() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		t := time.Now()
+		c.Next() // proccess request
+
+		elapsed := time.Since(t)
+		diff := *lag - elapsed
+		if diff > 0 {
+			time.Sleep(diff)
+			log.Println("Request took", elapsed, " - Lagging", diff)
+		}
+	}
+}
+
 func staticHandler() *gin.Engine {
 	router := gin.Default()
 	router.NoRoute(func(c *gin.Context) {
@@ -86,6 +100,7 @@ func staticHandler() *gin.Engine {
 
 func proxyHandler(url *url.URL) *gin.Engine {
 	router := gin.Default()
+	router.Use(Lag())
 	router.NoRoute(func(c *gin.Context) {
 		director := func(req *http.Request) {
 			req.URL.Scheme = url.Scheme
