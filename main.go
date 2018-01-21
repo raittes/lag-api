@@ -133,9 +133,8 @@ func main() {
 		log.Fatal("No handler specified")
 	}
 
+	log.Println("Listening at", *addr)
 	if err := handler.Run(*addr); err != nil {
 		log.Fatalf("Error in ListenAndServe: %s", err)
-	} else {
-		log.Println("Listening at", *addr)
 	}
 }
