@@ -1,0 +1,29 @@
+version: 2
+jobs:
+  build-n-deploy:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: docker build -t lag-api:${CIRCLE_TAG} .
+      - run:
+          name: Test
+          command: |
+              docker run -p 80:8888 -d lag-api:${CIRCLE_TAG} -proxy http://httpbin.org
+              curl --fail localhost/user-agent
+      - run:
+          name: Trigger Repo Build
+          command: |
+              curl -H "Content-Type: application/json" --data '{"source_type": "Tag", "source_name": "'${CIRCLE_TAG}'"}' -X POST ${DOCKER_BUILD_URL}
+
+workflows:
+  version: 2
+  build-n-deploy:
+    jobs:
+      - build-n-deploy:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
