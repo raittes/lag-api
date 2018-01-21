@@ -1,5 +1,5 @@
 # Build
-FROM golang:1.8-alpine3.6 as builder
+FROM golang:1.9-alpine3.6 as builder
 RUN apk update && apk add git
 RUN go get -u github.com/Masterminds/glide
 ADD . /go/src/lag-api
