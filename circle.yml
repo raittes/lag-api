@@ -1,0 +1,34 @@
+version: 2
+jobs:
+  build-n-deploy:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: docker build -t lag-api:${CIRCLE_TAG} .
+      - run:
+          name: Test
+          command: |
+              docker run -p 80:8888 -d lag-api:${CIRCLE_TAG} -proxy http://httpbin.org
+              curl --fail localhost/user-agent
+      - run:
+          name: Deploy
+          command: |
+              docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+              docker tag lag-api:${CIRCLE_TAG} raittes/lag-api:${CIRCLE_TAG}
+              docker push raittes/lag-api:${CIRCLE_TAG}
+              docker tag lag-api:${CIRCLE_TAG} raittes/lag-api:latest
+              docker push raittes/lag-api:latest
+
+
+workflows:
+  version: 2
+  build-n-deploy:
+    jobs:
+      - build-n-deploy:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
