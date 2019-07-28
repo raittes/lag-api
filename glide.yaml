@@ -1,5 +1,0 @@
-package: .
-import:
-- package: github.com/gin-gonic/gin
-  version: v1.2
-- package: gopkg.in/yaml.v2

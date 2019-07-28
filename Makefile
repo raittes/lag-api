@@ -1,12 +1,13 @@
 export GOPATH = $(PWD)/.go
 export GOBIN = $(GOPATH)/bin
+export PATH := $(GOBIN):${PATH}
 export PROJECT = $(GOPATH)/src/lag-api
 
-deps:
-	which glide || go get -u github.com/Masterminds/glide
-	mkdir -p $(GOPATH)/src && ln -sf $(PWD) .go/src/ #trick
-	$(GOBIN)/glide install
-build: deps
+dep:
+	@which dep || go get -u github.com/golang/dep/cmd/dep
+	cd ${PROJECT} && dep ensure && dep status
+
+build: dep
 	cd $(PROJECT) && go build
 
 run-static:
